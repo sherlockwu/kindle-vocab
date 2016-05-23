@@ -76,10 +76,10 @@ function upload() {
 }
 
 function show_question(answer) {
-    question_text = dict[correct_word] + '<br/>';
+    question_text = 'Def: ' + dict[correct_word].replace(correct_word, "****") + '<br/>';
     question_text += '<hr/>';
     for (var i=0; i<cur_words.length; i++) {
-	question_text += '('+(i+1)+') ';
+	question_text += '['+(i+1)+'] ';
 	if (cur_words[i] == answer) {
 	    question_text += '<b>' + cur_words[i] + '</b>';
 	} else {

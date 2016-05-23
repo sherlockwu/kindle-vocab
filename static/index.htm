@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="main.css">
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.2.min.js"></script>
     <script src="sdk.js"></script>
     <script src="main.js"></script>
@@ -8,6 +9,8 @@
   
   <body onload="main()">
 
+    <div id="page-wrap">
+    
     Status: <span id="status"></span>
 
     <h1>Step 1: Authenticate</h1>
@@ -31,6 +34,8 @@
     <div id="question">QUESTIONS</div>
     <br/>
     Your Answer: <input type="text" id="answer" size="4" onchange="answer()">
+
+    </div>
     
   </body>
 </html>
