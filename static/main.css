@@ -1,0 +1,36 @@
+@import url(https://fonts.googleapis.com/css?family=PT+Sans);
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro);
+
+body {
+    background-color: #4abdac;
+    padding: 0;
+    margin: 0;
+}
+
+#page-wrap {
+    width: 800px;
+    min-height: 800px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #dfdce3;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.title {
+    font-size: 2.5em;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    font-family: 'PT Sans', sans-serif;
+}
+
+input[type=text] {
+    font-size: 1em;
+    margin-left: 5px;
+    padding: 4px;
+    display: inline-block;
+    border: 2px solid #fc4a1a;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
