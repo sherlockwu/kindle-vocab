@@ -2,17 +2,35 @@
 <html>
   <head>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.2.min.js"></script>
+    <script src="sdk.js"></script>
     <script src="main.js"></script>
   </head>
   
   <body onload="main()">
 
-    <div id="status">STATUS</div>
+    Status: <span id="status"></span>
+
+    <h1>Step 1: Authenticate</h1>
+
+    Sign in with Facebook: <input type="button" id="login" onclick="login()" value="Sign In">
+
+    <br />
+
+    Or do a demo: <input type="button" id="demo" onclick="demo()" value="Demo">
+
+    <h1>Step 2: Upload Word Database</h1>
+
+    <p>
+      It's probably located here on your Kindle: system/vocabulary/vocab.db
+    </p>
+    
     <input type="file" id="file" size="50" onchange="upload()">
 
-    <p id="demo"></p>
+    <h1>Step 3: Practice!</h1>
 
-    <p><strong>Tip:</strong> Use the Control or the Shift key to select multiple files.</p>
-
+    <div id="question">QUESTIONS</div>
+    <br/>
+    Your Answer: <input type="text" id="answer" size="4" onchange="answer()">
+    
   </body>
 </html>
