@@ -37,7 +37,7 @@ function login() {
     FB.login(function(response) {
 	if (response.authResponse) {
 	    fbid = response.authResponse.accessToken;
-	    lambda({"op":"fetch"}, load_words);
+	    lambda({"op":"fetch_words"}, load_words);
 	    status("fetching your words");
 	} else {
 	    status('could not sign you in');
@@ -47,7 +47,7 @@ function login() {
 
 function demo() {
     fbid = "0";
-    lambda({"op":"fetch"}, load_words);
+    lambda({"op":"fetch_words"}, load_words);
     status("fetching your words");
 }
 
@@ -64,7 +64,7 @@ function upload() {
 	    cmd = {"op":"upload", "db":btoa(event.target.result)};
 	    lambda(cmd, function(data) {
 		status(data);
-		lambda({"op":"fetch"}, load_words);
+		lambda({"op":"fetch_words"}, load_words);
 		status("fetching your words");
 	    });
 	};
@@ -104,7 +104,13 @@ function show_question(answer) {
 }
 
 function answer() {
-    show_question(cur_words[parseInt($("#answer").val()) - 1]);
+    guess = cur_words[parseInt($("#answer").val()) - 1]
+    show_question(guess);
+    cmd = {"op":        "practice",
+	   "cur_words": cur_words,
+	   "guess":     guess,
+	   "actual":    correct_word};
+    lambda(cmd, function(data) {});
 }
 
 function quiz() {
@@ -132,13 +138,12 @@ function quiz() {
 // step 1
 function load_defs(data) {
     dict = data;
-    lambda({"op":"fetch"}, load_words);
+    lambda({"op":"fetch_words"}, load_words);
     status("fetching your words");
 }
 
 // step 2
-function load_words(data) {
-    words = data.words;
+function load_words(words) {
     quiz_words = [];
     for (var i = 0; i < words.length; i++) {
 	word = words[i].toLowerCase();

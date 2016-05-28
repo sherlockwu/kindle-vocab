@@ -7,33 +7,33 @@
     <script src="main.js"></script>
   </head>
   
-  <body onload="main()">
+  <body onload="main()">   
 
     <div id="page-wrap">
-    
-    Status: <span id="status"></span>
 
-    <h1>Step 1: Authenticate</h1>
+      Status: <span id="status"></span>
 
-    Sign in with Facebook: <input type="button" id="login" onclick="login()" value="Sign In">
+      <h1>Step 1: Authenticate</h1>
 
-    <br />
+      Sign in with Facebook: <input type="button" id="login" onclick="login()" value="Sign In">
 
-    Or do a demo: <input type="button" id="demo" onclick="demo()" value="Demo">
+      <br />
 
-    <h1>Step 2: Upload Word Database</h1>
+      Or do a demo: <input type="button" id="demo" onclick="demo()" value="Demo">
 
-    <p>
-      It's probably located here on your Kindle: system/vocabulary/vocab.db
-    </p>
-    
-    <input type="file" id="file" size="50" onchange="upload()">
+      <h1>Step 2: Upload Word Database</h1>
 
-    <h1>Step 3: Practice!</h1>
+      <p>
+	It's probably located here on your Kindle: system/vocabulary/vocab.db
+      </p>
+      
+      <input type="file" id="file" size="50" onchange="upload()">
 
-    <div id="question">QUESTIONS</div>
-    <br/>
-    Your Answer: <input type="text" id="answer" size="4" onchange="answer()">
+      <h1>Step 3: Practice!</h1>
+
+      <div id="question">QUESTIONS</div>
+      <br/>
+      Your Answer: <input type="text" id="answer" size="4" onchange="answer()">
 
     </div>
     
