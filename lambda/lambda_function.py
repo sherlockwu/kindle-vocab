@@ -50,11 +50,28 @@ def upload(event):
     words = [row[0] for row in conn.execute('SELECT word FROM words')]
     return update_user(event, words);
 
+def stats(event):
+    table = event['table']
+    response = table.get_item(Key={'fbid': event['fbid']})
+    correct = 0
+    wrong = 0
+    for row in response['Item']['practice']:
+        if row['actual'] == row['guess']:
+            correct += 1
+        else:
+            wrong += 1
+    rv = [
+        {'name': 'correct', 'val': correct},
+        {'name': 'wrong', 'val': wrong}
+    ]
+    return rv
+
 def lambda_handler(event, context):
     fn = {
         'upload': upload,
         'fetch_words': fetch_words,
         'practice': practice,
+        'stats': stats,
     }[event['op']]
 
     # authenticate with FB

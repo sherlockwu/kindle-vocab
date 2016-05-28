@@ -103,6 +103,18 @@ function show_question(answer) {
     $("#question").html(question_text);
 }
 
+function refresh() {
+    cmd = {"op": "stats"};
+    $("#stats").html("computing stats");
+    lambda(cmd, function(rows) {
+	out = '';
+	for (var i=0; i<rows.length; i++) {
+	    out += rows[i].name + ': ' + rows[i].val + '<br/>\n';
+	}
+	$("#stats").html(out);
+    });
+}
+
 function answer() {
     guess = cur_words[parseInt($("#answer").val()) - 1]
     show_question(guess);
