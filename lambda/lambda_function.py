@@ -1,38 +1,49 @@
 import sqlite3, base64, tempfile, os, traceback, urllib2, json
 
-class DB:
-    def __init__(self):
-        pass
-
 class DatabaseIF:
     def __init__(self):
         raise NotImplementedError()
 
-class DynamoDB(DB):
-    def __init__(self):
-        assert(0)
+    def append(self, rowkey, colkey, value):
+        raise NotImplementedError()
 
-    def append(self, row_key, col_key, value):
-        return
-        table = event['table']
-        result = table.update_item(
+    def get(self, rowkey):
+        raise NotImplementedError()
+
+    def put(self, row):
+        raise NotImplementedError()
+
+class DynamoDB(DatabaseIF):
+    def __init__(self, tablename, rowkey):
+        import boto3
+        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        self.table = dynamodb.Table(tablename)
+        self.rowkey = rowkey
+
+    def append(self, rowkey, colkey, value):
+        result = self.table.update_item(
             Key={
-                'fbid': event['fbid'],
+                self.rowkey: rowkey,
             },
-            UpdateExpression='SET practice = list_append(practice, :i)',
+            UpdateExpression='SET practice = list_append(%s, :i)' % colkey,
             ExpressionAttributeValues={
-                ':i': [row],
+                ':i': [value],
             },
             ReturnValues='UPDATED_NEW'
         )
 
-    def get(self, row_key):
-        pass
+    def get(self, rowkey):
+        # self.rowkey: field name
+        # rowkey:      field value
+        response = self.table.get_item(Key={self.rowkey: rowkey})
+        if not 'Item' in response:
+            return None
+        return response['Item']
 
-    def put(self, row_key, row):
-        pass
+    def put(self, row):
+        return self.table.put_item(Item=row)
 
-class RethinkDB(DB):
+class RethinkDB(DatabaseIF):
     def __init__(self, conn, dbname, tablename):
         import rethinkdb as r
         self.conn = conn
@@ -108,15 +119,6 @@ def stats(event):
 
 # aws entry
 def lambda_handler(event, context):
-    import boto3
-
-    fn = {
-        'upload': upload,
-        'fetch_words': fetch_words,
-        'practice': practice,
-        'stats': stats,
-    }[event['op']]
-
     # authenticate with FB
     if not 'fbid' in event:
         event['fbid'] = '0'
@@ -125,21 +127,33 @@ def lambda_handler(event, context):
         response = urllib2.urlopen(url)
         info = json.loads(response.read())
         event['fbid'] = info['id'];
-    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-    table = dynamodb.Table('kindle-users')
-    event['table'] = table
 
-    # run specific handler
-    return fn(event)
+    # use dynamoDB
+    event['table'] = DynamoDB('kindle-users', 'fbid')
 
-def handler(conn, event):
     fn = {
         'upload': upload,
         'fetch_words': fetch_words,
         'practice': practice,
         'stats': stats,
     }[event['op']]
+
+    # run specific handler
+    return fn(event)
+
+# ol entry
+def handler(conn, event):
+    # TODO: add FB support
+
+    # use rethinkDB
     event['table'] = RethinkDB(conn, 'vocab', 'kindle_users')
+
+    fn = {
+        'upload': upload,
+        'fetch_words': fetch_words,
+        'practice': practice,
+        'stats': stats,
+    }[event['op']]
 
     # run specific handler
     return fn(event)
