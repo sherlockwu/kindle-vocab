@@ -1,4 +1,55 @@
-import sqlite3, base64, tempfile, os, boto3, traceback, urllib2, json
+import sqlite3, base64, tempfile, os, traceback, urllib2, json
+
+class DB:
+    def __init__(self):
+        pass
+
+class DatabaseIF:
+    def __init__(self):
+        raise NotImplementedError()
+
+class DynamoDB(DB):
+    def __init__(self):
+        assert(0)
+
+    def append(self, row_key, col_key, value):
+        return
+        table = event['table']
+        result = table.update_item(
+            Key={
+                'fbid': event['fbid'],
+            },
+            UpdateExpression='SET practice = list_append(practice, :i)',
+            ExpressionAttributeValues={
+                ':i': [row],
+            },
+            ReturnValues='UPDATED_NEW'
+        )
+
+    def get(self, row_key):
+        pass
+
+    def put(self, row_key, row):
+        pass
+
+class RethinkDB(DB):
+    def __init__(self, conn, dbname, tablename):
+        import rethinkdb as r
+        self.conn = conn
+        self.table = r.db(dbname).table(tablename)
+
+    def append(self, rowkey, colkey, value):
+        table = self.table
+        # not atomic!
+        lst = table.get(rowkey)[colkey].run(self.conn)
+        lst.append(value)
+        return table.get(rowkey).update({colkey: lst}).run(self.conn)
+
+    def get(self, rowkey):
+        return self.table.get(rowkey).run(self.conn)
+
+    def put(self, row):
+        return self.table.insert(row, conflict='replace').run(self.conn)
 
 def update_user(event, words):
     # insert words in dynamodb
@@ -6,10 +57,10 @@ def update_user(event, words):
     user = {'fbid': event['fbid'],
             'words': words,
             'practice': []}
-    response = table.put_item(Item=user)
-    return response
+    return table.put(user)
 
 def practice(event):
+    table = event['table']
     assert(len(event['cur_words']) <= 10)
     for w in event['cur_words']:
         assert(isinstance(w, basestring))
@@ -19,27 +70,15 @@ def practice(event):
     row = {'cur_words': event['cur_words'],
 	   'guess':     event['guess'],
 	   'actual':    event['actual']};
-    
-    table = event['table']
-    result = table.update_item(
-        Key={
-            'fbid': event['fbid'],
-        },
-        UpdateExpression='SET practice = list_append(practice, :i)',
-        ExpressionAttributeValues={
-            ':i': [row],
-        },
-        ReturnValues='UPDATED_NEW'
-    )
-    return result
+    return table.append(event['fbid'], 'practice', row)
 
 def fetch_words(event):
     table = event['table']
-    response = table.get_item(Key={'fbid': event['fbid']})
-    if not 'Item' in response:
+    row = table.get(event['fbid'])
+    if row == None:
         update_user(event, [])
-    response = table.get_item(Key={'fbid': event['fbid']})
-    return response['Item']['words']
+    row = table.get(event['fbid'])
+    return row['words']
 
 def upload(event):
     fd, path = tempfile.mkstemp(suffix='.db')
@@ -52,10 +91,11 @@ def upload(event):
 
 def stats(event):
     table = event['table']
-    response = table.get_item(Key={'fbid': event['fbid']})
+    user = table.get(event['fbid'])
+
     correct = 0
     wrong = 0
-    for row in response['Item']['practice']:
+    for row in user['practice']:
         if row['actual'] == row['guess']:
             correct += 1
         else:
@@ -66,7 +106,10 @@ def stats(event):
     ]
     return rv
 
+# aws entry
 def lambda_handler(event, context):
+    import boto3
+
     fn = {
         'upload': upload,
         'fetch_words': fetch_words,
@@ -85,6 +128,18 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
     table = dynamodb.Table('kindle-users')
     event['table'] = table
+
+    # run specific handler
+    return fn(event)
+
+def handler(conn, event):
+    fn = {
+        'upload': upload,
+        'fetch_words': fetch_words,
+        'practice': practice,
+        'stats': stats,
+    }[event['op']]
+    event['table'] = RethinkDB(conn, 'vocab', 'kindle_users')
 
     # run specific handler
     return fn(event)
