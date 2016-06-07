@@ -117,6 +117,15 @@ def stats(event):
     ]
     return rv
 
+def handler_generic(event):
+    fn = {
+        'upload': upload,
+        'fetch_words': fetch_words,
+        'practice': practice,
+        'stats': stats,
+    }[event['op']]
+    return fn(event)    
+
 # aws entry
 def lambda_handler(event, context):
     # authenticate with FB
@@ -131,15 +140,7 @@ def lambda_handler(event, context):
     # use dynamoDB
     event['table'] = DynamoDB('kindle-users', 'fbid')
 
-    fn = {
-        'upload': upload,
-        'fetch_words': fetch_words,
-        'practice': practice,
-        'stats': stats,
-    }[event['op']]
-
-    # run specific handler
-    return fn(event)
+    return handler_generic(event)
 
 # ol entry
 def handler(conn, event):
@@ -148,12 +149,4 @@ def handler(conn, event):
     # use rethinkDB
     event['table'] = RethinkDB(conn, 'vocab', 'kindle_users')
 
-    fn = {
-        'upload': upload,
-        'fetch_words': fetch_words,
-        'practice': practice,
-        'stats': stats,
-    }[event['op']]
-
-    # run specific handler
-    return fn(event)
+    return handler_generic(event)

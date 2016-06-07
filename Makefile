@@ -13,6 +13,7 @@ lambda :
 
 local :
 	python update-conf.py ol
+	python setup.py
 
 s3 : static/dict.json
 	python update-conf.py aws
