@@ -1,0 +1,5 @@
+*~
+*.pyc
+*.zip
+static/dict.json
+static/config.json
