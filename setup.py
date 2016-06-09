@@ -58,12 +58,6 @@ def main():
     print 'Init DB'
     db_init(worker0['ip'])
 
-    # directions
-    print '='*40
-    print 'Consider serving the app with nginx as follows:'
-    print NGINX_EXAMPLE % static_dir
-    return None
-
 if __name__ == '__main__':
     rv = main()
     if rv != None:
