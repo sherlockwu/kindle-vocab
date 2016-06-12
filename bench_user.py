@@ -18,9 +18,10 @@ def db_b64():
         return base64.b64encode(f.read())
 
 class User():
-    def __init__(self, fbid):
+    def __init__(self, fbid, endtime):
         self.url = conf()['url']
         self.fbid = fbid
+        self.endtime = endtime
         self.db = db_b64()
         self.ops = [
             {'fn': self.OP_fetch_words, 'freq': 1},
@@ -73,22 +74,25 @@ class User():
             r -= op['freq']
 
     def run(self):
-        for i in range(10): # TODO: until particular time
+        while True:
             delay = max(random.normalvariate(ARRIVAL_INTERVAL_MEAN,
                                              ARRIVAL_INTERVAL_DEV), 0)
+            if time.time() + delay >= self.endtime:
+                break
             # TODO: subtract out time spent on last req
             time.sleep(delay)
             self.rand_op()
         return self.stats
 
 class UserProcess:
-    def __init__(self, fbid):
+    def __init__(self, fbid, endtime):
         self.fbid = fbid
         self.parent_conn = None
         self.child = None
+        self.endtime = endtime
 
     def run(self, conn):
-        u = User(self.fbid)
+        u = User(self.fbid, self.endtime)
         results = u.run()
         conn.send(results)
         conn.close()
@@ -114,11 +118,14 @@ def run(conn):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--users', '-u', metavar='u', default=1, type=int)
+    parser.add_argument('--seconds', '-s', metavar='s', default=10, type=int)
     args = parser.parse_args()
+
+    endtime = time.time() + args.seconds
 
     procs = []
     for i in range(args.users):
-        procs.append(UserProcess(i+1))
+        procs.append(UserProcess(i+1, endtime))
 
     for proc in procs:
         proc.start()
