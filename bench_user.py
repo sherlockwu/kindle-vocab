@@ -18,9 +18,9 @@ def db_b64():
         return base64.b64encode(f.read())
 
 class User():
-    def __init__(self):
+    def __init__(self, fbid):
         self.url = conf()['url']
-        self.fbid = 0
+        self.fbid = fbid
         self.db = db_b64()
         self.ops = [
             {'fn': self.OP_fetch_words, 'freq': 1},
@@ -81,6 +81,28 @@ class User():
             self.rand_op()
         return self.stats
 
+class UserProcess:
+    def __init__(self, fbid):
+        self.fbid = fbid
+        self.parent_conn = None
+        self.child = None
+
+    def run(self, conn):
+        u = User(self.fbid)
+        results = u.run()
+        conn.send(results)
+        conn.close()
+
+    def start(self):
+        self.parent_conn, child_conn = Pipe()
+        self.child = Process(target=self.run, args=(child_conn,))
+        self.child.start()
+
+    def wait(self):
+        result = self.parent_conn.recv()
+        self.child.join()
+        return result
+
 # child
 def run(conn):
     u = User()
@@ -90,11 +112,19 @@ def run(conn):
 
 # parent
 def main():
-    parent_conn, child_conn = Pipe()
-    p = Process(target=run, args=(child_conn,))
-    p.start()
-    print parent_conn.recv()
-    p.join()
+    procs = []
+    for i in range(100): # TODO: conf
+        procs.append(UserProcess(i+1))
+
+    for proc in procs:
+        proc.start()
+
+    totals = {'latency-sum': 0.0, 'ops': 0.0}
+    for proc in procs:
+        results = proc.wait()
+        for k in totals.keys():
+            totals[k] += results[k]
+    print 'Average latency: %.3f seconds' % (totals['latency-sum'] / totals['ops'])
 
 if __name__ == '__main__':
     main()
