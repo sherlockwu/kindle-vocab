@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, requests, json, base64, time, random, collections
+import os, sys, requests, json, base64, time, random, collections, argparse
 from multiprocessing import Process, Pipe
 
 # TODO: use conf
@@ -112,8 +112,12 @@ def run(conn):
 
 # parent
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--users', '-u', metavar='u', default=1, type=int)
+    args = parser.parse_args()
+
     procs = []
-    for i in range(100): # TODO: conf
+    for i in range(args.users):
         procs.append(UserProcess(i+1))
 
     for proc in procs:
